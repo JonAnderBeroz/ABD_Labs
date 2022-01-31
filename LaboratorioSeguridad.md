@@ -178,5 +178,11 @@ ABDN: REVOKE ALL ON EMPLEADOS FROM USUARIOAn;
 USUARIOBN: REVOKE ALL ON ASIGNATURAS FROM USUARIOAn;
 ```
 
+¿Qué ha o currido? ¿Por qué? ¿Qué ocurre al incluir CASCADE CONSTRAINTS con la
+restricción de integridad refe rencial definida en la tabla? Incluye una tupla que viol e
+dicha restricción.
+
+El revoke hecho por ABDN no ha dado ninguna error, pero el de USUARIO04B ha dado error ya que unas de sus tables es referencia como __FOREIGN KEY__ asi que nos insta a usar ``CASCADE CONSTRAINTS`` para poder revokar todos los privilegios.
+
 
 
