@@ -179,10 +179,29 @@ USUARIOBN: REVOKE ALL ON ASIGNATURAS FROM USUARIOAn;
 ```
 
 ¿Qué ha o currido? ¿Por qué? ¿Qué ocurre al incluir CASCADE CONSTRAINTS con la
-restricción de integridad refe rencial definida en la tabla? Incluye una tupla que viol e
+restricción de integridad refe rencial definida en la tabla? Incluye una tupla que viole
 dicha restricción.
 
-El revoke hecho por ABDN no ha dado ninguna error, pero el de USUARIO04B ha dado error ya que unas de sus tables es referencia como __FOREIGN KEY__ asi que nos insta a usar ``CASCADE CONSTRAINTS`` para poder revokar todos los privilegios.
+El revoke hecho por ABDN no ha dado ninguna error, pero el de USUARIO04B ha dado error ya que unas de sus tables es referencia como __FOREIGN KEY__ en la tabla Estudiantes	 del USUARIOA04 asi que nos insta a usar ``CASCADE CONSTRAINTS`` para poder revokar todos los privilegios. Una  tupla que viole el uso referencial podria ser la siguiente:
+
+``INSERT INTO estudiantes 	VALUES(3, "manolo");``
+
+8. __Permisos para public (todo el mundo).__ En la sesión del USUARIOCn crear una nueva
+tabla NOTAS (DNI, nota) con tuplas.
+
+```
+CREATE TABLE NOTAS(
+DNI number primary key,
+nota number(2)
+);
+```
+- Otorgar el privilegio de seleccionar sobre dicha tabla al USUARIOAn
+- Otorgar el mismo privilegio a todos los usuarios. Comprobar si el USUARIOBn puede
+acceder a dicha tabla.
+- Retirar dicho privilegio a todos los usuarios. ¿Qué ocurre con el acceso desde el
+USUARIOAn?
+
+
 
 
 
