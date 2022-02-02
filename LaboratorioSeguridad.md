@@ -194,12 +194,39 @@ CREATE TABLE NOTAS(
 DNI number primary key,
 nota number(2)
 );
+COMMIT;
 ```
 - Otorgar el privilegio de seleccionar sobre dicha tabla al USUARIOAn
+
+``GRANT SELECT ON NOTAS TO USUARIOA04;``
+
 - Otorgar el mismo privilegio a todos los usuarios. Comprobar si el USUARIOBn puede
 acceder a dicha tabla.
+
+``GRANT SELECT ON NOTAS TO PUBLIC;``
+
+USUARIOB04 es capaz de hacer un select sobre el contenido de la tabla.
+
 - Retirar dicho privilegio a todos los usuarios. ¿Qué ocurre con el acceso desde el
 USUARIOAn?
+
+``REVOKE SELECT ON NOTAS FROM PUBLIC;``
+
+USUARIOA04 puede seguir viendo la tabla NOTAS, esto es devido a que el propio USUARIOC04 le doy los permisos, por ende, el ``REVOKE PUBLIC`` no tiene efecto sobre USUARIOA04.
+
+9. __Crear grupos de usuarios y sus permisos, roles.__
+
+- Crear un rol USUARIOn y otorgárselo a los usuarios USUARIOAn y USUARIOBn. ¿Podrías
+crear un rol ABDn?
+
+- Cuáles son los pasos a seguir para que los usuarios con role USUARIOn puedan acceder
+a la tabla DEPARTAMENTOS. Hazlo y comprueba que los usuarios pueden hacer uso de
+su permiso. Primero cierra la sesión o haz SET ROLE ALL o bien haz SET ROLE
+USUARIOn en la sesión del USUARIOAn y USUARIOBn.
+
+
+
+
 
 
 
