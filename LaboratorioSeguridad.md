@@ -219,10 +219,101 @@ USUARIOA04 puede seguir viendo la tabla NOTAS, esto es devido a que el propio US
 - Crear un rol USUARIOn y otorgárselo a los usuarios USUARIOAn y USUARIOBn. ¿Podrías
 crear un rol ABDn?
 
+```
+CREATE ROLE USUARIO04
+```
+
+```
+ALTER USER USUARIOA04
+DEFAULT ROLE USUARIO04;
+
+ALTER USER USUARIOB04
+DEFAULT ROLE USUARIO04;
+
+ALTER USER USUARIOC04
+DEFAULT ROLE USUARIO04;
+
+COMMIT;
+```
 - Cuáles son los pasos a seguir para que los usuarios con role USUARIOn puedan acceder
 a la tabla DEPARTAMENTOS. Hazlo y comprueba que los usuarios pueden hacer uso de
 su permiso. Primero cierra la sesión o haz SET ROLE ALL o bien haz SET ROLE
 USUARIOn en la sesión del USUARIOAn y USUARIOBn.
+
+El primero paso para que los usuarios pudieras acceder a la tabla __DEPARTAMENTOS__
+
+`` GRANT SELECT ON DEPARTAMENTON TO USUARIO04;``
+
+10. __Quitar permisos de objetos vs quitar permisos del sistema__
+
+- Otorgar el privilegio CREATE TABLE siguiendo la siguiente secuencia:
+
+	```
+	ABDn: GRANT CREATE TABLE TO USUARIOAn WITH ADMIN OPTION;
+	USUARIOAn: GRANT CREATE TABLE TO USUARIOBn WITH ADMIN OPTION;
+	USUARIOBn: GRANT CREATE TABLE TO USUARIOCn WITH ADMIN OPTION;
+	USUARIOBn: CREATE TABLE NUEVATABLA (CUANTOS NUMBER);
+	USUARIOCn: REVOKE CREATE TABLE FROM USUARIOBn; 	
+	```
+
+	¿Qué ocurre? Tiene ahora el usuario USUARIOBn posibilidad de crear una nueva tabla
+	TABLAB? 
+
+	Despues de que USUARIOC04 le quitara los permisos de crear tablas a USUARIOB04 este no es capaz de crear la tabla TABLAB
+
+- Crear una nueva tabla OTRA en el esquema del USUARIOAn. Otorgar el privilegio SELECT
+siguiendo la siguiente secuencia:
+
+	```
+	USUARIOAn: GRANT SELECT ON OTRA TO USUARIOBn WITH GRANT OPTION;
+	USUARIOBn: GRANT SELECT ON USUARIOAn.OTRA TO USUARIOCn WITH GRANT OPTION;
+	USUARIOCn: REVOKE SELECT ON USUARIOAn.OTRA FROM USUARIOBn; 
+	```
+	¿Qué ocurre? Cuál es la diferencia con el apartado a? 
+
+	En este caso el revoke darie error debido a que USUARIOC04 no ha otorgado el permiso de __SELECT__ a USUARIOB04.
+
+11. __Eliminación de usuarios.__ Eliminar desde la sesión de ABDn el USUARIOCn (sus conexiones
+
+``DROP USER USUARIOC04 CASCADE;``
+
+12. __Crear un perfil.__ Desde la conexión ABDn obtén información de los usuarios a través de la
+tabla DBA_USERS:
+
+	```
+	SELECT USERNAME, CREATED, ACCOUNT_STATUS, PROFILE FROM DBA_USERS
+	WHERE DEFAULT_TABLESPACE='USERS';
+	```
+
+	Analiza la información obtenida. Por ejemplo, los usuarios tienen asignado el perfil DEFAULT.
+
+	Comprueba que el usuario USUARIOBn puede abrir dos sesiones diferentes (después cierra
+	las dos conexiones). Crear un nuevo perfil, PERFILBn, desde la conexión de ABDn, que
+	permita a los usuarios abrir sólo una sesión (parámetro SESSIONS_PER_USER), y asignar
+	dicho perfil al usuario USUARIOBn (puedes ver en DBA_USERS cómo ha cambiado). Ahora
+	trata de abrir dos sesiones con USUARIOBn. ¿Qué ocurre?
+
+Creacion de perfil:
+
+```
+CREATE PROFILE TEST LIMIT
+SESSIONS_PER_USER 1;
+
+COMMIT;
+```
+
+Atribucion del perfil:
+
+```
+ALTER USER USUARIOB04
+PROFILE TEST;
+```
+
+Al intentar crear una 2da sesion con USUARIOB04 esta dara error ya que al asignarle el perfil TEST este no deja crear mas de una sesion por usuario.
+
+
+
+
 
 
 
