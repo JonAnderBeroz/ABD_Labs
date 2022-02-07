@@ -242,7 +242,7 @@ USUARIOn en la sesión del USUARIOAn y USUARIOBn.
 
 El primero paso para que los usuarios pudieras acceder a la tabla __DEPARTAMENTOS__
 
-`` GRANT SELECT ON DEPARTAMENTON TO USUARIO04;``
+`` GRANT SELECT ON DEPARTAMENTOS TO USUARIO04;``
 
 10. __Quitar permisos de objetos vs quitar permisos del sistema__
 
