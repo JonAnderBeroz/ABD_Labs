@@ -63,7 +63,7 @@ AUDIT UPDATE TABLE BY USUARIOBn BY ACCESS WHENEVER NOT SUCCESSFUL;
 USUARIOBn. Comprueba que la tabla DEPARTAMENTOS DE ABDn contiene una tupla con el departamento de nombre 'LSI' y otra con el nombre 'ATC' (en caso contrario haz el INSERT) y que la tabla EMPLEADOS contiene un empleado con dni =123456 . Realiza algunas modificaciones abriendo sesiones desde USUARIOAn y USUARIOBn de manera que unas terminen correctamente y otras no.
 Por ejemplo
 
-|  USUARIOA04 | USUARIOA04   |
+|  USUARIOA04 | USUARIOB04   |
 |---|---|
 |``update ABDn.DEPARTAMENTOS set PRESUPUESTO=99999 where NOMBRE='LSI';`` | ``update ABDn.DEPARTAMENTOS set PRESUPUESTO=88888 where NOMBRE='ATC'; ``|
 ``update ABDn.DEPARTAMENTOS set PRESU= 99999 where NOMBRE='LSI';`` | ``update ABDn.DEPARTAMENTOS set PRESU= 88888 where NOMBRE='ATC';``   |
@@ -74,6 +74,71 @@ Por ejemplo
 - Comprueba con SYS.DBA_AUDIT_TRAIL (con WHERE OWNER = 'ABDn') qué registros se
 obtienen y explica por qué.
 
+USUARIOA04:
+
 | Comandos  | Registros de auditorias  |
 |---|:---:|
 |  - |  USERNAME OWNER OBJ_NAME ACTION_NAME TIMESTAMP RETURNCODE |
+| ``update ABDn.DEPARTAMENTOS set PRESUPUESTO=99999 where NOMBRE='LSI';`` | - |
+| ``update ABDn.DEPARTAMENTOS set PRESU= 99999 where NOMBRE='LSI';``| -|
+
+
+USUARIOB04:
+
+| Comandos  | Registros de auditorias  |
+|---|:---:|
+|  - |  USERNAME OWNER OBJ_NAME ACTION_NAME TIMESTAMP RETURNCODE |
+| ``update ABDn.DEPARTAMENTOS set PRESUPUESTO=88888 where NOMBRE='ATC';`` | - |
+| ``update ABDn.DEPARTAMENTOS set PRESU= 88888 where NOMBRE='ATC';``| USUARIOB04	ABD04	DEPARTAMENTOS	UPDATE	10/02/22	904	|
+|``update into ABDn.DEPARTAMENTOS set PRESUPUESTO= 88888 where NOMBRE='ATC';``| USUARIOB04	ABD04	DEPARTAMENTOS	UPDATE	10/02/22	904	|
+|``update ABDn.EMPLEADOS set SALARIO= 2500 where DNI=123456;``| USUARIOB04	ABD04	EMPLEADOS	UPDATE	10/02/22	2004 |
+|``update ABDn.DEPTOS set PRESUPUESTO= 88888 where NOMBRE='ATC';``| - |
+
+En las consultas hechas desde  USUARIOA04 no se van a dejar trazas ya que se uso la opcion __WHENEVER SUCCESSFUL__, esto quiere decir q la traza solo se creara cuando la consulta termine correctamente.
+
+En el caso de USUARIOB04 hay algunas trazan que no aparecen a pesar de tener la opcion __WHENEVER NOT SUCCESSFUL__ y haber fallado en su ejecucion. Esto puede suceder pq la tabla a la que se intenta hacer un update no existe por lo q no se puede crear una traza a algo inexistente.
+
+4. __Transacciones y auditorías.__ Desde la sesión de ABDn definimos una auditoría sobre un
+objeto concreto, la tabla EMPLEADOS mediante la sentencia:
+
+``AUDIT INSERT ON ABDn.EMPLEADOS BY ACCESS WHENEVER SUCCESSFUL;``
+
+Comprobar en ``SYS.DBA_OBJ_AUDIT_OPTS con OWNER='ABDn'`` su activación
+
+| Object Name   | Object Type  | Del   |    Ins  | Sel  | Upd  |   
+|---|---|---|---|---|---|
+| EMPLEADOS  | TABLE  | -/-  | A/-  | -/-  | -/-  |
+
+- Otorga el privilegio necesario a USARIOAn para que pueda insertar en la tabla
+EMPLEADOS. Comprobar qué ocurre si realizamos los siguientes INSERT en la tabla
+ABDn.EMPLEADOS (abriendo sesión para USUARIOAn) cumpliéndose que una está y
+otra no:
+
+```
+INSERT INTO ABDn.EMPLEADOS VALUES (123456, 1000, 'LSI'); (tupla existente)
+INSERT INTO ABDn.EMPLEADOS VALUES (222222, 1000, 'ATC'); (tupla inexistente)
+```
+
+Comprueba con SYS.DBA_AUDIT_TRAIL (con OWNER = 'ABDn') cuántos registros se
+obtienen y explica por qué.
+
+|Comandos|Registro auditoria|
+|--|--|
+| -|USERNAME OWNER OBJ_NAME ACTION_NAME TIMESTAMP RETURNCODE|
+|``INSERT INTO ABDn.EMPLEADOS VALUES (123456, 1000, 'LSI');``| - |
+|``INSERT INTO ABDn.EMPLEADOS VALUES (222222, 1000, 'ATC'); ``| USUARIOA04	ABD04	EMPLEADOS	INSERT	10/02/22	0 |
+
+Al ser __WHENEVER SUCCESSFULL__ solo se creara una traza cuando la consulta sea complete correctamente.
+
+* Abre una sesión para USUARIOAn y realiza las siguientes transacciones insertando
+nuevas tuplas en la tabla.  
+
+```
+INSERT INTO ABDn.EMPLEADOS VALUES (111111, 2000, 'LSI');
+COMMIT;
+INSERT INTO ABDn.EMPLEADOS VALUES (333333, 3000, 'ATC');
+ROLLBACK;
+```
+|Comandos|Registro de auditoría|
+|--|--|
+|``INSERT INTO ABDn.EMPLEADOS VALUES (111111, 2000, 'LSI'); COMMIT; INSERT INTO ABDn.EMPLEADOS VALUES (333333, 3000, 'ATC'); ROLLBACK;`` |USUARIOA04	ABD04	EMPLEADOS	INSERT	10/02/22	0	 |
