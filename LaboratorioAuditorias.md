@@ -142,3 +142,13 @@ ROLLBACK;
 |Comandos|Registro de auditoría|
 |--|--|
 |``INSERT INTO ABDn.EMPLEADOS VALUES (111111, 2000, 'LSI'); COMMIT; INSERT INTO ABDn.EMPLEADOS VALUES (333333, 3000, 'ATC'); ROLLBACK;`` |USUARIOA04	ABD04	EMPLEADOS	INSERT	10/02/22	0	 |
+
+5. 
+
+6. 
+
+7. __Auditorias de sentencia.__ Otorgar a USUARIOAn los privilegios que le permitan realizar
+CREATE USER y ALTER USER. Definir un auditoría para las sentencias de usuario desde la
+sesión de ABDn mediante
+
+``AUDIT USER BY USUARIOAn``
