@@ -152,3 +152,25 @@ CREATE USER y ALTER USER. Definir un auditoría para las sentencias de usuario d
 sesión de ABDn mediante
 
 ``AUDIT USER BY USUARIOAn``
+
+|Registros|
+|--|
+| USUARIOA04		USUARIOD04	DROP USER	14/02/22	0 |
+| USUARIOA04		USUARIOD04	DROP USER	14/02/22	1031|
+|USUARIOA04		USUARIOD04	ALTER USER	14/02/22	0|
+| USUARIOA04		USUARIOD04	CREATE USER	14/02/22	0  |
+
+Como podemos ver se han creado 4 registros al auditar en USER, con esto podemos intuir esta auditoria reacciona a las acciones de crear, borrar y editar un usuario.
+
+Supón  que  queremos  eliminar  la  auditoría  sobre  ALTER  USER  y  mantener  las  de  DROP  
+USER y CREATE USER. ¿Es posible?
+
+No seria posible, ya que no hay una accion de auditoria q solo incluya el drop y el creat. La unica opcion que tenemos es auditar sobre user y este reacciona a las acciones de crear, borrar y editar un usuario
+
+
+
+
+
+
+
+
