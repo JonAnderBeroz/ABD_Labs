@@ -10,13 +10,13 @@ Los dos con el role ABDUSER.
 USUARIOA04:
 |Username|Sid (Session id)|
 |-|-|
-|USUARIOA04|189|
+|USUARIOA04|281|
 
 USUARIOB04:
 
 |Username|Sid (Session id)|
 |-|-|
-|USUARIOB04|303|
+|USUARIOB04|247|
 
 __2. Control de la concurrencia__
 
@@ -209,7 +209,7 @@ __4. Bloqueo de intención.__
 
 En la sesión del usuarioAn realiza un 
 
-`SELECT FOR UPDATE SELECT * FROM CUENTA WHERE numero=11 FOR UPDATE;` 
+`SELECT * FROM CUENTA WHERE numero=11 FOR UPDATE;` 
 En la sesión del usuarioBn 
 - ¿Se podrá ver el contenido de la tabla CUENTA?  
 Si, ya que el select no interfiere con el update
@@ -227,3 +227,124 @@ En la sesión del usuario ABDn consulta la vista V$LOCK.
 
 Explica  brevemente  qué  ha  ido  pasando  y  por  qué  responde  o  no  el  sistema  (según  haya  
 sido el caso).
+
+En este caso con la sentencia del usuario a estamos reservando la tupla con el numero 11 para un posible update. Entonces mientras USUARIOB04 no intente hacer un updte en la misma tupla este no se vera afectado, ni bloqueado.
+
+__5.Concurrencia con bloqueo exclusivo de la tabla__
+
+En la sesión del usuarioAn 
+- Reservar la tabla cuenta en modo X 
+
+`LOCK TABLE CUENTA IN EXCLUSIVE MODE;`
+
+- Modificar el valor de saldo de la tupla con número = 11 
+
+`UPDATE CUENTA SET saldo = 8500 Where Numero = 11;`
+
+En la sesión del usuarioBn 
+- ¿Se podrá ver el contenido de la tabla CUENTA? ¿Por qué? 
+En este caso si que se podria acceder a la informacion de la tabla cuenta, pero habria q tener en cuenta q esta seria la version antigua ya que USUARIOA04 no ha acabado la transaccion y para no dejar esperando Oracle hace uso de la multiversion.
+- ¿Se puede modificar el valor de saldo de la cuenta número 22? ¿Por qué?
+En este caso el update no seria posible ya que la tabla CUENTA a sido reserva en modo exclusivo por USUARIOA04
+
+En la sesión del usuario ABDn consulta la vista V$LOCK. 
+
+|SID|ID1|ID2|LMODE|REQUEST|TYPE|CTIME|BLOCK|
+|-|-|-|:-:|:-:|-|-|-|
+|281|	1427337|	0|	6|	0|	TM|	510|	1|
+|281|	133|	0|	4|	0|	AE|	1059|	0|
+|281|	720926|	2286195|	6|	0|	TX|	500|	0|
+
+Ver el contenido de la tabla CUENTA en las sesiones de los dos usuarios antes y después de 
+hacer el commit. 
+
+Podemos observar que antes del commit solo USUARIOA04 ve el cambio de valor en la tupla con el numero 11.
+
+Explica  brevemente  qué  ha  ido  pasando  y  por  qué  responde  o  no  el  sistema  (según  haya  
+sido el caso)
+
+El sistema ha llegado al bloque debido a que USUARIOA04 ha reservado la tabla y USUARIOB al intentar hacer un update, cuando aun  USUARIOA04 no ha terminado la transaccion, ha terminado en bloqueo.
+
+__6. Concurrencia con bloqueo compartido de la tabla RS__
+
+En la sesión del usuarioAn 
+
+- Reservar  la  tabla  CUENTA  en  modo  RS.  Y  comprueba  el  tipo  de  reserva  de  en  la  vista  
+V$LOCK  
+`LOCK TABLE CUENTA IN ROW SHARE MODE`
+
+|SID|ID1|ID2|LMODE|REQUEST|TYPE|CTIME|BLOCK|
+|-|-|-|:-:|:-:|-|-|-|
+|281|	1427337|	0|	6|	0|	TM|	1574|	1|
+|281|	133|	0|	4|	0|	AE|	2123	|0|
+|281|	720926|	2286195|	6|	0|	TX|	1564|	0|
+
+- Modificar el valor de saldo de la tupla con número = 11 
+
+`UPDATE CUENTA SET saldo = 3500 WHERE Numero = 11`
+
+En la sesión del usuarioBn: 
+- ¿Se podrá ver el contenido de la tabla CUENTA? 
+Si debido a que el select no reserva en modo exclusivo.
+- ¿Se podrá modificar el valor de saldo de la cuenta número 22? ¿Por qué? 
+
+`UPDATE Usuarioa.CUENTA SET saldo = 2800 WHERE Numero = 22; `
+
+No, ya que el update reserva en modo exclusivo
+- ¿Se podrá modificar el valor de saldo de la cuenta número 11? ¿Por qué? 
+
+`UPDATE Usuarioa.CUENTA SET saldo = 2700 WHERE Numero = 11 `
+
+No, ya que el update reserva en modo exclusivo
+
+En la sesión del usuario ABDn consulta la vista V$LOCK. 
+
+|SID|ID1|ID2|LMODE|REQUEST|TYPE|CTIME|BLOCK|
+|-|-|-|:-:|:-:|-|-|-|
+|281|	1427337|	0|	6|	0|	TM|	1574|	1|
+|281|	133|	0|	4|	0|	AE|	2123	|0|
+|281|	720926|	2286195|	6|	0|	TX|	1564|	0|
+
+Explica  brevemente  qué  ha  ido  pasando  y  por  qué  responde  o  no  el  sistema  (según  haya  
+sido el caso).
+
+Primero USUARIOA04 ha bloqueado la tabla en modo compartido por lo que cualquier operacion es posible siempre y cuando esta no reserve en modo exclusivo.
+
+Despues ha actulizado la tupla con el numero 11  sin acabar la transaccion, por lo que esta tupla sigue reservada en modo exclusivo.
+
+Despues USUARIOB04  ha hecho un select que no ha dado problemas por que este no reserva en modo exclusivo por lo q no paso nada relevante.
+
+Finalmente al hacer los updates, ha habido bloqueos, ya que estos reservan la tupla en modo exclusivo.
+
+__7. Concurrencia con bloqueo compartido de la tabla S__
+
+En la sesión del usuarioBn reserva la tabla CUENTA en modo SHARE MODE. 
+
+En la sesión del usuarioAn 
+
+- ¿Se podrá borrar la tabla CUENTA? ¿Qué será necesario para solucionar el problema?  
+
+No, ya que USUARIOB04 no ha acabado la transaccion por lo que los recursos no estan disponibles para ser borrados.
+
+En la sesión del usuario ABDn consulta la vista V$LOCK. 
+
+
+|SID|ID1|ID2|LMODE|REQUEST|TYPE|CTIME|BLOCK|
+|-|-|-|:-:|:-:|-|-|-|
+|247|	133|	0|	4|	0|	AE|	3746|	0|
+|247|	1427337|	0|	4|	0|	TM|	428|	0|
+
+Explica  brevemente  qué  ha  ido  pasando  y  por  qué  responde  o  no  el  sistema  (según  haya  
+sido el caso). 
+
+Al bloquear la tabla CUENTA en modo compartido por  USUARIOB04, esta no puede ser erservada de modo exlusivo. De modo que cuando USUARIOA04 va a borrar la tabla se encuentra q esta bloqueada.
+
+__8. Como ABD qué pasos seguirías para ver qué sesiones están siendo bloqueadas por otros usuarios y a qué usuarios pertenecen.__
+
+Para ello usariamos la siguiente sentencia:
+
+```
+ELECT sid, username, blocking_session 
+FROM V$SESSION 
+WHERE sid=número de sesión;
+```
