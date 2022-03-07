@@ -344,7 +344,6 @@ __8. Como ABD qué pasos seguirías para ver qué sesiones están siendo bloquea
 Para ello usariamos la siguiente sentencia:
 
 ```
-ELECT sid, username, blocking_session 
-FROM V$SESSION 
-WHERE sid=número de sesión;
+SELECT v1.sid as sid_bloqueador, v1.username as bloqueador, v2.sid as sid_boqueado, v2.username as bloqueado
+FROM V$SESSION  v1 join V$SESSION v2 on v1.blocking_session = v2.sid;
 ```
