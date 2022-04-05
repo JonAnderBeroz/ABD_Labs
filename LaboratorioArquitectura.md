@@ -49,34 +49,24 @@ Los parámetros que van precedidos por abdlab.__ son parámetros a los que ha as
 valor automáticamente la propia base de datos. Toma nota de sus valores. (Podría verse
 ejecutando show parameter pero aparecen muchos más)
 
-abdlab.__data_transfer_cache_size=0
-abdlab.__db_cache_size=289406976
-abdlab.__java_pool_size=4194304
-abdlab.__large_pool_size=8388608
-abdlab.__oracle_base='C:\oracle'#ORACLE_BASE set from environment
-abdlab.__pga_aggregate_target=335544320
-abdlab.__sga_target=503316480
-abdlab.__shared_io_pool_size=16777216
-abdlab.__shared_pool_size=176160768
-abdlab.__streams_pool_size=0
-*.audit_file_dest='C:\oracle\admin\abdlab\adump'
-*.audit_trail='db'
-*.compatible='12.1.0.2.0'
-*.control_files='C:\oracle\oradata\abdlab\control01.ctl','C:\oracle\fast_recovery_area\abdlab\control02.ctl'
-*.db_block_size=8192
-*.db_domain='si.ehu.es'
-*.db_name='abdlab'
-*.db_recovery_file_dest='C:\oracle\fast_recovery_area'
-*.db_recovery_file_dest_size=24080m
-*.diagnostic_dest='C:\oracle'
-*.dispatchers='(PROTOCOL=TCP) (SERVICE=abdlabXDB)'
-*.memory_target=800m
-*.nls_language='SPANISH'
-*.nls_territory='SPAIN'
-*.open_cursors=300
-*.processes=300
-*.remote_login_passwordfile='EXCLUSIVE'
-*.undo_tablespace='UNDOTBS1'
+|Parametro|Valor|
+|-|-|
+audit_file_dest | 'C:\oracle\admin\abdlab\adump'
+audit_trail | 'db'
+compatible | '12.1.0.2.0'
+control_files |'C:\oracle\oradata\abdlab\control01.ctl'<br>'C:\oracle\fast_recovery_area\abdlab\control02.ctl'
+db_block_size | 8192
+db_domain | 'si.ehu.es'
+db_name | 'abdlab'
+db_recovery_file_dest | 'C:\oracle\fast_recovery_area'
+db_recovery_file_dest_size | 24080m
+diagnostic_dest | 'C:\oracle'
+memory_target | 800m
+open_cursors |300
+processes |300
+remote_login_passwordfile | 'EXCLUSIVE'
+sec_case_sensitive_logon | TRUE
+undo_tablespace | 'UNDOTBS1'
 
 - Puedes ver que la instalación de Oracle con la que se ha trabajado en los otros laboratorios
 es similar a la de esta máquina virtual. Desde una sesión con tu usuario ABDn puedes
@@ -113,3 +103,42 @@ tablas?
 también los objetos incluidos en él) pero manteniendo el fichero físico espacioN.dbf.
 Comprueba que así ha sido. ('C:\ORACLE\ORADATA\ABDLAB\espacioN.dbf'). Asignar de
 nuevo al usuario1 el tablespace USERS con cuota ilimitada.
+
+
+__3. Ficheros de Redo Log__
+
+Modifica el formato de la fecha para que muestre también la hora ALTER SESSION SET
+nls_date_format = 'YYYY-MON-DD HH24:MI:SS';
+
+- Analizar la localización de los ficheros de redo log de la base de datos y la composición de
+los grupos. Para comprobar cuántos grupos de redo log hay y sus miembros, la vista
+__v$logfile__ con los atributos: __group# y __member__. Para analizar las características de los
+grupos, la vista __v$log__ con sus atributos: __group#__ (número del grupo), __sequence#__
+(número de secuencia actual), __bytes__ (tamaño), __members__ (número de miembros),
+__archived__ (si está archivado o no), __status__ (estado actual), __first_change#__ (número que
+corresponde a la primera modificación almacenada en el fichero) y __first_time__ (cuándo se
+ha empezado a utilizar el grupo). ( Valores del atributo status: UNUSED – el grupo de redo
+log no se ha utilizado nunca, CURRENT- el grupo es el actual (también está activo), ACTIVE
+– el grupo está activo, pero no es el actual, INACTIVE – el grupo no es necesario en un
+proceso de recuperación hipotético)
+
+|||||
+|-|-|-|-|
+|group#|1|2|3|
+|Ficheros redo log|C:\ORACLE\ORADATA\ABDLAB\REDO01.LOG|C:\ORACLE\ORADATA\ABDLAB\REDO02.LOG|C:\ORACLE\ORADATA\ABDLAB\REDO03.LOG|
+|members|1|1|1|
+|sequence#|25|26|24|
+|bytes|67108864|67108864|67108864|
+|archived|NO|NO|NO|
+|status|INACTIVE|CURRENT|INACTIVE|
+|first_change#|1078226|1182966|972760|
+|first_time|04/04/22|05/04/22|04/04/2|
+
+- Para comprobar el modo de log y el modo de archivo de la base de datos, acceder a las
+vistas __v$database__ (atributo __log_mode__) y __v$instance__ (atributo __archiver__),
+respectivamente.
+
+|||
+|-|-|
+|modo log| NOARCHIVE LOG|
+|proceso| STTOPED|
